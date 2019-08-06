@@ -171,7 +171,6 @@ filter.tbl_df <- function(.data, ..., .preserve = FALSE) {
     return(.data)
   }
   quo <- all_exprs(!!!dots, .vectorised = TRUE)
-<<<<<<< HEAD
 
   rows <- group_rows(.data)
 
@@ -203,11 +202,6 @@ filter.tbl_df <- function(.data, ..., .preserve = FALSE) {
     new_rows_sizes[group] <- sum(res, na.rm = TRUE)
     group_indices[current_rows] <- group
     keep[current_rows[res]] <- TRUE
-=======
-  out <- filter_impl(.data, quo)
-  if (!.preserve && is_grouped_df(.data)) {
-    out <- regroup(out)
->>>>>>> vctrs powered group_by() (#4504)
   }
 
   out <- vec_slice(.data, keep)
@@ -250,7 +244,6 @@ slice.tbl_df <- function(.data, ..., .preserve = FALSE) {
   mask <- DataMask$new(.data, caller_env(), rows)
 
   quo <- quo(c(!!!dots))
-<<<<<<< HEAD
 
   slice_indices <- new_list(length(rows))
   new_rows <- new_list(length(rows))
@@ -295,11 +288,6 @@ slice.tbl_df <- function(.data, ..., .preserve = FALSE) {
     new_k <- k + length(res)
     new_rows[[group]] <- seq2(k, new_k - 1L)
     k <- new_k
-=======
-  out <- slice_impl(.data, quo)
-  if (!.preserve && is_grouped_df(.data)) {
-    out <- regroup(out)
->>>>>>> vctrs powered group_by() (#4504)
   }
   all_slice_indices <- vec_c(!!!slice_indices, .ptype = integer())
 
