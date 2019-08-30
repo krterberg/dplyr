@@ -160,7 +160,6 @@ regroup <- function(data) {
   data
 }
 
-
 #' @export
 filter.tbl_df <- function(.data, ..., .preserve = FALSE) {
   dots <- enquos(...)
@@ -353,7 +352,6 @@ mutate.tbl_df <- function(.data, ...) {
     if (any(null_results)) {
       abort("incompatible results for mutate(), some results are NULL")
     }
-
     result <- vec_slice(vec_c(!!!chunks), o_rows)
 
     if ((is.null(dots_names) || dots_names[i] == "") && is.data.frame(result)) {
