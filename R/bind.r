@@ -98,6 +98,10 @@ bind_rows <- function(..., .id = NULL) {
   dataframe_ish <- function(.x) {
     is.data.frame(.x) || (vec_is(.x) && !is.null(names(.x)))
   }
+  dots <- keep(
+    flatten_if(dots, function(.x) is.list(.x) && !is.data.frame(.x)),
+    function(.x) !is.null(.x)
+  )
 
   dots <- keep(dots, function(.x) !is.null(.x))
   dots <- flatten_if(dots, function(.x) is.list(.x) && !dataframe_ish(.x))
