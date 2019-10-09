@@ -162,15 +162,6 @@ regroup <- function(data) {
 
 #' @export
 filter.tbl_df <- function(.data, ..., .preserve = FALSE) {
-  dots <- enquos(...)
-  if (any(have_name(dots))) {
-    bad <- dots[have_name(dots)]
-    bad_eq_ops(bad, "Filter specifications must not be named")
-  } else if (is_empty(dots)) {
-    return(.data)
-  }
-  quo <- all_exprs(!!!dots, .vectorised = TRUE)
-
   rows <- group_rows(.data)
 
   # workaround when there are 0 groups
@@ -179,6 +170,15 @@ filter.tbl_df <- function(.data, ..., .preserve = FALSE) {
   }
 
   mask <- DataMask$new(.data, caller_env(), rows)
+
+  dots <- enquos(...)
+  if (any(have_name(dots))) {
+    bad <- dots[have_name(dots)]
+    bad_eq_ops(bad, "Filter specifications must not be named")
+  } else if (is_empty(dots)) {
+    return(.data)
+  }
+  quo <- all_exprs(!!!dots, .vectorised = TRUE)
 
   keep <- logical(nrow(.data))
   group_indices <- integer(nrow(.data))
@@ -234,13 +234,13 @@ filter_.tbl_df <- function(.data, ..., .dots = list()) {
 
 #' @export
 slice.tbl_df <- function(.data, ..., .preserve = FALSE) {
+  rows <- group_rows(.data)
+  mask <- DataMask$new(.data, caller_env(), rows)
+
   dots <- enquos(...)
   if (is_empty(dots)) {
     return(.data)
   }
-
-  rows <- group_rows(.data)
-  mask <- DataMask$new(.data, caller_env(), rows)
 
   quo <- quo(c(!!!dots))
 
@@ -312,13 +312,6 @@ slice_.tbl_df <- function(.data, ..., .dots = list()) {
 
 #' @export
 mutate.tbl_df <- function(.data, ...) {
-  dots <- enquos(...)
-  dots_names <- names(dots)
-  auto_named_dots <- names(enquos(..., .named = TRUE))
-  if (length(dots) == 0L) {
-    return(.data)
-  }
-
   rows <- group_rows(.data)
   rows_lengths <- lengths(rows)
   # workaround when there are 0 groups
@@ -328,6 +321,13 @@ mutate.tbl_df <- function(.data, ...) {
 
   o_rows <- vec_order(vec_c(!!!rows, .ptype = integer()))
   mask <- DataMask$new(.data, caller_env(), rows)
+
+  dots <- enquos(...)
+  dots_names <- names(dots)
+  auto_named_dots <- names(enquos(..., .named = TRUE))
+  if (length(dots) == 0L) {
+    return(.data)
+  }
 
   new_columns <- list()
 
@@ -405,8 +405,12 @@ validate_summarise_sizes <- function(x, .size) {
 DataMask <- R6Class("DataMask",
   public = list(
     initialize = function(data, caller, rows = group_rows(data)) {
+      frame <- caller_env(n = 2)
+      tidyselect::scoped_vars(tbl_vars(data), frame)
+
       private$old_group_size <- context_env[["..group_size"]]
       private$old_group_number <- context_env[["..group_number"]]
+
       private$rows <- rows
 
       private$data <- data
@@ -483,6 +487,7 @@ DataMask <- R6Class("DataMask",
     mask = NULL,
     old_group_size = 0L,
     old_group_number = 0L,
+    old_vars = character(),
     rows = NULL,
     bindings = NULL,
     current_group = 0L,
@@ -493,10 +498,6 @@ DataMask <- R6Class("DataMask",
 #' @importFrom tibble add_column
 #' @export
 summarise.tbl_df <- function(.data, ...) {
-  dots <- enquos(...)
-  dots_names <- names(dots)
-  auto_named_dots <- names(enquos(..., .named = TRUE))
-
   rows <- group_rows(.data)
   # workaround when there are 0 groups
   if (length(rows) == 0L) {
@@ -504,6 +505,10 @@ summarise.tbl_df <- function(.data, ...) {
   }
 
   mask <- DataMask$new(.data, caller_env(), rows)
+
+  dots <- enquos(...)
+  dots_names <- names(dots)
+  auto_named_dots <- names(enquos(..., .named = TRUE))
 
   summaries <- list()
 
@@ -515,6 +520,7 @@ summarise.tbl_df <- function(.data, ...) {
     #
     # TODO: reinject hybrid evaluation at the R level
     quo <- dots[[i]]
+
     chunks <- map(seq_along(rows), function(group) {
       mask$eval(quo, group)
     })
