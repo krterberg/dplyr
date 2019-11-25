@@ -162,6 +162,14 @@ regroup <- function(data) {
 
 #' @export
 filter.tbl_df <- function(.data, ..., .preserve = FALSE) {
+  dots <- enquos(...)
+  if (any(have_name(dots))) {
+    bad <- dots[have_name(dots)]
+    bad_eq_ops(bad, "Filter specifications must not be named")
+  } else if (is_empty(dots)) {
+    return(.data)
+  }
+  quo <- all_exprs(!!!dots, .vectorised = TRUE)
   rows <- group_rows(.data)
 
   # workaround when there are 0 groups

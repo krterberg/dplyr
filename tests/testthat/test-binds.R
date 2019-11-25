@@ -490,11 +490,6 @@ test_that("bind_rows infers classes from first result (#1692)", {
   expect_equal(class(bind_rows(d4, d1)), c("rowwise_df", "tbl_df", "tbl", "data.frame"))
 })
 
-test_that("bind_rows infers classes from first result (#1692)", {
-  skip("to be discussed")
-  expect_equal(class(bind_rows(d5, d1)), c("tbl_df", "tbl", "data.frame"))
-})
-
 test_that("bind_cols infers classes from first result (#1692)", {
   d1 <- data.frame(a = 1:10, b = rep(1:2, each = 5))
   d2 <- tibble(c = 1:10, d = rep(1:2, each = 5))
@@ -596,10 +591,10 @@ test_that("supports NULL values", {
   expect_identical(bind_cols(a = 1, NULL, b = 2, NULL), tibble(a = 1, b = 2))
 })
 
-test_that("bind_cols handles unnamed list (#3402)", {
+test_that("bind_cols() handles unnamed list with name repair (#3402)", {
   expect_identical(
     bind_cols(list(1, 2)),
-    bind_cols(list(V1 = 1, V2 = 2))
+    bind_cols(list(...1 = 1, ...2 = 2))
   )
 })
 
